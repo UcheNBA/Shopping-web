@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Login - My Shop{% endblock %}
+{% block content %}
+<div style="max-width:420px;margin:0 auto">
+  <h1 style="margin-top:0">Sign in</h1>
+  {% if error %}<p style="color:#b91c1c">{{ error }}</p>{% endif %}
+  <form method="post" style="background:var(--card);padding:1rem;border-radius:12px;box-shadow:0 8px 24px rgba(16,24,40,0.06)">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username
+      <input name="username" required>
+    </label>
+    <label>Password
+      <div style="position:relative">
+        <input id="login-pass" name="password" type="password" required style="width:100%;padding-right:2.5rem;box-sizing:border-box">
+        <button type="button" onclick="toggleLoginPass()" style="position:absolute;right:0;top:0;height:100%;background:none;border:none;cursor:pointer;color:var(--text);padding:0 .75rem;font-size:1.1rem;" title="Toggle password visibility">
+          <i class="fas fa-eye" id="login-eye"></i>
+        </button>
+      </div>
+    </label>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem">
+      <button class="btn" type="submit">Sign in</button>
+      <a class="btn ghost" href="/">Back</a>
+    </div>
+  </form>
+  <p style="margin-top:1rem;text-align:center"><a href="/forgot-password" style="font-size:0.9rem">Forgot Password?</a></p>
+  <p style="margin-top:.5rem">Don't have an account? <a href="/register">Register</a></p>
+</div>
+<script>
+function toggleLoginPass() {
+  var x = document.getElementById("login-pass");
+  var i = document.getElementById("login-eye");
+  if (x.type === "password") {
+    x.type = "text";
+    i.classList.remove("fa-eye");
+    i.classList.add("fa-eye-slash");
+  } else {
+    x.type = "password";
+    i.classList.remove("fa-eye-slash");
+    i.classList.add("fa-eye");
+  }
+}
+</script>
+{% endblock %}

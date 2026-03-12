@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}LOL SHOPPING{% endblock %}
+{% block hero %}
+<div class="hero" style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap">
+  <div style="flex:1;min-width:260px">
+    <h1 style="margin:0;font-size:1.65rem">Discover great finds shop with confidence</h1>
+    <p class="muted" style="margin:.5rem 0 0">Curated products, simple checkout, and private shopping for members.</p>
+    <div style="margin-top:1rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+      {% if not session.get('user_id') %}
+        <a class="btn" href="/register"><i class="fa fa-user-plus" style="margin-right:.5rem"></i> Create account</a>
+        <a class="btn ghost" href="/login"><i class="fa fa-sign-in-alt" style="margin-right:.5rem"></i> Sign in</a>
+      {% else %}
+        <a class="btn" href="/profile"><i class="fa fa-user" style="margin-right:.5rem"></i> Your profile</a>
+        <a class="btn ghost" href="/cart"><i class="fa fa-shopping-cart" style="margin-right:.5rem"></i> View cart</a>
+      {% endif %}
+      <span class="chip">Free shipping over ₦50</span>
+    </div>
+  </div>
+  <div style="flex:1;min-width:260px;text-align:right">
+    <img src="/static/hero-decor.svg" alt="hero" style="border-radius:12px;box-shadow:0 12px 40px rgba(2,6,23,0.6)">
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+  .feature-item { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--card); border-radius: 8px; flex: 1; min-width: 200px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .feature-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: var(--accent); color: white; border-radius: 50%; font-size: 1.1rem; }
+</style>
+
+<!-- Features Banner -->
+<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem">
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fas fa-shipping-fast"></i></div>
+    <div><div style="font-weight:600">Fast Delivery</div><div style="font-size:0.85rem;color:var(--muted)">Swift shipping nationwide</div></div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+    <div><div style="font-weight:600">Secure Payment</div><div style="font-size:0.85rem;color:var(--muted)">100% secure checkout</div></div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fas fa-headset"></i></div>
+    <div><div style="font-weight:600">24/7 Support</div><div style="font-size:0.85rem;color:var(--muted)">We are here to help</div></div>
+  </div>
+</div>
+
+<h1 style="margin:0 0 .5rem 0">Products</h1>
+<p style="color:var(--muted);margin-top:0;margin-bottom:1rem">Browse our sample products. Click a product to view details.</p>
+<form method="get" action="{{ url_for('shop') }}" style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+  <input name="q" value="{{ request.args.get('q', '') }}" placeholder="Search products..." style="flex:1;padding:.5rem;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:inherit">
+  <input name="min_price" value="{{ request.args.get('min_price', '') }}" type="number" step="0.01" placeholder="Min price" style="width:110px;padding:.4rem;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02)">
+  <input name="max_price" value="{{ request.args.get('max_price', '') }}" type="number" step="0.01" placeholder="Max price" style="width:110px;padding:.4rem;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02)">
+  <select name="sort" onchange="this.form.submit()" style="padding:.4rem;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:inherit;">
+      <option value="default" {% if not request.args.get('sort') or request.args.get('sort') == 'default' %}selected{% endif %}>Sort by: Default</option>
+      <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+      <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+  </select>
+  <button class="btn small" type="submit">Filter</button>
+</form>
+<div style="margin-bottom:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
+  {% set cats = [
+    ('men', 'fa-tshirt'),
+    ('women', 'fa-female'),
+    ('bags', 'fa-shopping-bag'),
+    ('sports', 'fa-futbol'),
+    ('musical', 'fa-music'),
+    ('kids', 'fa-child')
+  ] %}
+  {% set current_cat = request.args.get('category') %}
+  <a class="chip" href="{{ url_for('shop') }}"><i class="fas fa-th-large" style="margin-right:0.4rem"></i>All</a>
+  {% for c_name, c_icon in cats %}
+    <a class="chip" href="{{ url_for('shop', category=c_name) }}" {% if current_cat == c_name %}style="background:var(--accent);color:#fff"{% endif %}><i class="fas {{ c_icon }}" style="margin-right:0.4rem"></i>{{ c_name|capitalize }}</a>
+  {% endfor %}
+</div>
+{% if products %}
+  <div class="grid">
+    {% for p in products %}
+    <article class="card">
+      {% if p.image %}
+        <img class="product-img product-image-zoomable" src="{{ url_for('static', filename=p.image) }}" alt="{{ p.name }}">
+      {% else %}
+        <div style="height:160px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;color:var(--muted)">No image</div>
+      {% endif %}
+      <div style="flex:1">
+        <h3 style="margin:.5rem 0">{{ p.name }} <span style="font-size:.8rem;color:var(--muted);font-weight:600">• New</span></h3>
+        <p class="price">₦{{ '%.2f'|format(p.price) }}</p>
+        {% if p.category %}
+          <a class="chip" href="{{ url_for('shop', category=p.category) }}" style="margin-left:.5rem">{{ p.category|capitalize }}</a>
+        {% endif %}
+        <p style="color:var(--muted);font-size:.95rem">{{ p.description }}</p>
+        <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center">
+          <div class="rating" title="Rating">{% for i in range(p.rating|round(0,'floor')|int) %}★{% endfor %}{% for i in range(5 - (p.rating|round(0,'floor')|int)) %}<span style="color:rgba(255,255,255,0.08)">★</span>{% endfor %}</div>
+          <div class="chip">In stock</div>
+        </div>
+      </div>
+      <div style="margin-top: .75rem;display:flex;gap:.5rem">
+        <form action="/add_to_cart" method="post" style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="product_id" value="{{ p.id }}">
+          <input type="number" name="quantity" value="1" min="1" style="width: 55px; padding: .25rem; text-align: center; border-radius: 6px;">
+          <button class="btn small" type="submit"><i class="fa fa-shopping-cart" style="margin-right:.15rem"></i>Add</button>
+        </form>
+        <a class="btn ghost small" href="/product/{{ p.id }}" style="flex:1;text-align:center;"><i class="fa fa-eye" style="margin-right:.15rem"></i>Details</a>
+        {% if session.get('user_id') %}
+        <form action="{{ url_for('add_to_wishlist') if p.id not in wishlist_ids else url_for('remove_from_wishlist') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ p.id }}">
+            <button class="btn ghost small" type="submit" title="Add to Wishlist" style="width:26px; color: {{ 'var(--danger)' if p.id in wishlist_ids else 'var(--muted)' }}">
+                <i class="fa fa-heart"></i></button>
+        </form>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div style="text-align:center;padding:2rem;background:var(--card);border-radius:12px;">
+    <h3 style="margin:0;">No Products Found</h3>
+    <p style="color:var(--muted);margin-top:.5rem;">Try adjusting your search or filters.</p>
+    <a href="{{ url_for('shop') }}" class="btn ghost" style="margin-top:1rem;">Clear All Filters</a>
+  </div>
+{% endif %}
+{% endblock %}

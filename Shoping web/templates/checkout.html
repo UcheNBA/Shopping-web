@@ -1,0 +1,8 @@
+<form action="/checkout" method="post" style="margin-top:.5rem">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+  <button name="payment_method" value="bank">
+    Bank Transfer
+  </button>
+</form>

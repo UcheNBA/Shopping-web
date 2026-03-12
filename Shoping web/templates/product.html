@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} - My Shop{% endblock %}
+{% block content %}
+<article class="product">
+  <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      {% if product.image %}
+        <img class="product-img product-image-zoomable" src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
+      {% else %}
+        <div style="height:260px;border-radius:8px;background:linear-gradient(180deg,#f0f6ff,#f7fbff);display:flex;align-items:center;justify-content:center;color:var(--muted)">No image</div>
+      {% endif %}
+    </div>
+    <div style="flex:2;min-width:260px">
+      <h1 style="margin-top:0">{{ product.name }} <span class="chip" style="margin-left:.5rem">New</span></h1>
+      <p class="price">₦{{ '%.2f'|format(product.price) }}</p>
+      <div style="display:flex;gap:1rem;align-items:center; margin-bottom: 0.5rem;">
+        <div class="rating" title="{{ '%.1f'|format(product.rating or 0) }} out of 5">
+          {% set rounded_rating = (product.rating or 0)|round(0, 'floor')|int %}
+          {% for i in range(rounded_rating) %}★{% endfor %}{% for i in range(5 - rounded_rating) %}<span style="color:#e2e8f0">★</span>{% endfor %}
+        </div>
+        <a href="#reviews" style="color:var(--muted); text-decoration:underline;">{{ reviews|length }} review(s)</a>
+      </div>
+      <p style="color:var(--muted);margin-top:.5rem">{{ product.description }}</p>
+      <div style="margin-top:1rem;max-width:320px">
+        <form action="/add_to_cart" method="post" id="form-add-cart">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <label>Quantity:
+          <input type="number" name="quantity" value="1" min="1" style="width:100px">
+        </label>
+        </form>
+        <div style="margin-top:.5rem;display:flex;align-items:center">
+          <button class="btn" type="submit" form="form-add-cart"><i class="fa fa-shopping-cart" style="margin-right:.5rem"></i> Add to cart</button>
+          {% if session.get('user_id') %}
+          <form action="{{ url_for('add_to_wishlist') if product.id not in wishlist_ids else url_for('remove_from_wishlist') }}" method="post" style="margin-left:.6rem">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <button class="btn ghost" type="submit"><i class="fa fa-heart" style="margin-right:.5rem; color: {{ 'var(--danger)' if product.id in wishlist_ids else 'inherit' }};"></i>
+                {{ 'In Wishlist' if product.id in wishlist_ids else 'Wishlist' }}</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 3rem;" id="reviews">
+    <h2>Customer Reviews ({{ reviews|length }})</h2>
+    {% if reviews %}
+      {% for review in reviews %}
+        <div class="card" style="margin-bottom: 1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>{{ review.username }}</strong>
+            <div class="rating">
+              {% for i in range(review.rating|int) %}★{% endfor %}{% for i in range(5 - review.rating|int) %}<span style="color:#e2e8f0">★</span>{% endfor %}
+            </div>
+          </div>
+          <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.5rem;">Reviewed on: {{ (review.created_at or '').split(' ')[0] }}</div>
+          <p style="margin:0;">{{ review.comment }}</p>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No reviews yet. Be the first to review this product!</p>
+    {% endif %}
+  </div>
+
+</article>
+{% endblock %}

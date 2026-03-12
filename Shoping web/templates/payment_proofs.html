@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Payment Proofs{% endblock %}
+
+{% block content %}
+<h1>Payment Proofs</h1>
+<table class="cart">
+  <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>User</th>
+      <th>Total</th>
+      <th>Status</th>
+      <th>Payment Method</th>
+      <th>Date Uploaded</th>
+      <th>Proof</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in orders %}
+    <tr>
+      <td>{{ o.id }}</td>
+      <td>{{ o.user_name }}</td>
+      <td>₦{{ '%.2f'|format(o.total) }}</td>
+      <td>
+        <span class="chip" style="{% if o.status in ['PAID', 'SHIPPED', 'DELIVERED'] %}background:var(--success);color:white{% elif o.status in ['REJECTED', 'CANCELLED'] %}background:var(--danger);color:white{% else %}background:var(--warning);color:white{% endif %}">
+          {{ o.status.replace('_', ' ')|title }}
+        </span>
+      </td>
+      <td>{{ o.payment_method }}</td>
+      <td data-label="Date Uploaded">{{ (o.proof_uploaded_at or '').split('.')[0] }}</td>
+      <td>
+        {% if o.proof %}
+          <a class="btn small" href="{{ url_for('static', filename=o.proof) }}" target="_blank">View Proof</a>
+        {% else %}
+          Not uploaded
+        {% endif %}
+        {% if o.status == 'PAID' %}
+          <button class="btn small ship-btn" data-order-id="{{ o.id }}" style="background:var(--accent-2);margin-left:0.5rem">Mark Shipped</button>
+        {% endif %}
+        {% if o.status == 'SHIPPED' %}
+          <button class="btn small deliver-btn" data-order-id="{{ o.id }}" style="background:var(--accent);margin-left:0.5rem">Mark Delivered</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<style>
+.toast{position:fixed;right:20px;bottom:20px;background:#222;color:#fff;padding:10px 14px;border-radius:8px;opacity:0;transform:translateY(8px);transition:all .25s ease;z-index:9999}
+.toast.visible{opacity:1;transform:translateY(0)}
+</style>
+
+<script>
+document.addEventListener('click', function(e){
+  if(e.target.matches('.ship-btn') || e.target.matches('.deliver-btn')){
+    e.preventDefault();
+    const isShip = e.target.matches('.ship-btn');
+    const action = isShip ? 'ship' : 'deliver';
+    const orderId = e.target.dataset.orderId;
+    if(!confirm(`Mark order ${orderId} as ${isShip ? 'shipped' : 'delivered'}?`)) return;
+    
+    const csrf = document.querySelector('input[name="csrf_token"]')?.value || '{{ csrf_token() }}';
+    
+    fetch(`/admin/orders/${action}/${orderId}`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrf}
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.ok) {
+        showToast(`Order ${orderId} marked as ${isShip ? 'shipped' : 'delivered'}.`);
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast('Error updating order.');
+      }
+    });
+  }
+});
+function showToast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.classList.add('visible'),10);
+  setTimeout(()=>{t.classList.remove('visible');setTimeout(()=>t.remove(),300)},3000);
+}
+</script>
+{% endblock %}

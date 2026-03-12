@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us - My Shop{% endblock %}
+{% block content %}
+<div style="max-width: 720px; margin: 0 auto;">
+  <h1 style="text-align: center;">Get in Touch</h1>
+  <p style="text-align: center;" class="muted">We'd love to hear from you! Whether you have a question about our products, an order, or anything else, our team is ready to answer all your questions.</p>
+
+  <div class="card" style="margin-top: 2rem; padding: 2rem;">
+    <h2>Contact Information</h2>
+    <p>For any inquiries, please reach out to us via email or phone. We strive to respond to all queries within 24 hours.</p>
+    
+    <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <i class="fas fa-envelope" style="font-size: 1.5rem; color: var(--accent); width: 24px; text-align: center;"></i>
+        <div>
+          <h4 style="margin: 0;">Email</h4>
+          <a href="mailto:prosperonyekwere04@gmail.com">prosperonyekwere04@gmail.com</a>
+        </div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <i class="fas fa-phone-alt" style="font-size: 1.5rem; color: var(--accent); width: 24px; text-align: center;"></i>
+        <div>
+          <h4 style="margin: 0;">Phone</h4>
+          <a href="tel:08145929790">08145929790</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

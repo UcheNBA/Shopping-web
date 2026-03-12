@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Welcome - My Shop{% endblock %}
+{% block content %}
+<style>
+  /* hide global header/footer for a pure splash experience */
+  header.site-header, .site-footer { display: none !important; }
+  html,body{height:100%;margin:0}
+
+  /* animated colorful background */
+  .splash{min-height:40vh;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(45deg,#ff416c,#ff4b2b,#ffe29f,#9be15d);background-size:400% 400%;animation:grad 12s ease infinite}
+  @keyframes grad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  /* magic circular title */
+  .magic-circle{width:300px;height:300px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
+  .circle-inner{width:86%;height:86%;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 60%)}
+
+  /* rotating colorful ring layers */
+  .magic-circle:before{content:"";position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(from 0deg, rgba(255,255,255,0.0), rgba(255,255,255,0.06), rgba(255,255,255,0.0));filter:blur(8px);opacity:.9;transform:rotate(0deg);animation:spin 8s linear infinite}
+  .magic-circle:after{content:"";position:absolute;inset:-14px;border-radius:50%;background:conic-gradient(#ff7a18,#af002d,#1e90ff,#8a2be2,#ff7a18);mask:radial-gradient(farthest-side, transparent calc(100% - 8px), black calc(100% - 6px));filter:blur(14px);opacity:.85;animation:spin 12s linear reverse infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* sparkles using pseudo-elements */
+  .sparkles{position:absolute;inset:0;border-radius:50%;pointer-events:none}
+  .sparkles:before{content:'';position:absolute;left:8%;top:18%;width:6px;height:6px;border-radius:50%;background:gold;box-shadow:0 0 8px gold, 70px -20px 0 2px rgba(255,255,255,0.12), 120px 40px 0 3px rgba(255,255,255,0.08);opacity:0.95;transform:translateZ(0);animation:spark 3.2s linear infinite}
+  .sparkles:after{content:'';position:absolute;right:12%;bottom:18%;width:5px;height:5px;border-radius:50%;background:#9be15d;box-shadow:-60px -30px 0 2px rgba(255,255,255,0.06), -110px 20px 0 3px rgba(255,255,255,0.04);opacity:0.9;animation:spark 4.1s linear infinite}
+  @keyframes spark{0%{transform:scale(.85) translateY(0) rotate(0);opacity:0.95}50%{transform:scale(1.15) translateY(-6px) rotate(45deg);opacity:0.6}100%{transform:scale(.9) translateY(0) rotate(90deg);opacity:0.95}}
+
+  .magic-text{font-size:20px;line-height:1.05;letter-spacing:1.2px;margin:0;font-weight:900;text-transform:uppercase;text-align:center;color:transparent;background:linear-gradient(90deg,#ffffff,#ffd5aa,#fff);-webkit-background-clip:text;background-clip:text;text-shadow:0 8px 30px rgba(0,0,0,0.28);animation:magicsheen 3.6s linear infinite}
+  @keyframes magicsheen{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  /* full-screen panel that will appear after delay */
+  .panel-fullscreen{position:fixed;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,247,250,0.98));display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .35s ease}
+  .panel-fullscreen.visible{opacity:1;pointer-events:auto}
+  .panel-inner{width:min(760px,94vw);background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(250,250,255,0.95));padding:1.5rem;border-radius:14px;box-shadow:0 12px 40px rgba(16,24,40,0.12)}
+
+  /* colorful buttons */
+  .btn.gradient{background:linear-gradient(90deg,#6a11cb,#2575fc);color:white;border:none}
+  .btn.gradient:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,117,252,0.18)}
+  .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.08);color:inherit}
+
+  .form-input{width:100%;padding:.6rem;margin-top:.35rem;border:1px solid #e6e9ef;border-radius:8px}
+
+  @media (max-width:640px){.magic-text{font-size:16px}.panel-inner{width:94vw;padding:1rem}}
+</style>
+
+<div class="splash">
+  <div class="magic-circle" role="img" aria-label="WELCOME TO LOL SHOPPING 🛒🛍">
+    <div class="sparkles" aria-hidden="true"></div>
+    <div class="circle-inner">
+      <h1 class="magic-text">WELCOME TO<br>LOL SHOPPING 🛒🛍</h1>
+    </div>
+  </div>
+</div>
+
+<div style="position:fixed;bottom:15%;left:0;width:100%;text-align:center;z-index:999">
+  <div style="display:flex;gap:1rem;justify-content:center;align-items:center">
+    <a class="btn" style="background:white;color:#111;border:none;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2)" href="{{ url_for('register') }}">Create Account</a>
+    <a class="btn ghost" style="background:white;color:#111;border:none;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2)" href="{{ url_for('shop') }}">Enter Shop</a>
+  </div>
+  <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-top:1rem">Redirecting automatically...</p>
+</div>
+
+<script>
+  // After a delay, redirect the user to the main site.
+  document.addEventListener('DOMContentLoaded', function(){
+    const delay = 3000; // 3 seconds
+    setTimeout(()=>{
+      window.location.href = "{{ url_for('shop') }}";
+    }, delay);
+  });
+</script>
+
+{% endblock %}

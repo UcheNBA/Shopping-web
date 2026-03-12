@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bank Transfer Payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F0F9FF;
+            --card: #FFFFFF;
+            --text: #0C4A6E;
+            --muted: #64748B;
+            --border: #BAE6FD;
+            --accent: #0EA5E9;
+            --accent-hover: #0284C7;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 90%;
+            margin: 2rem auto;
+            background-color: var(--card);
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            text-align: center;
+            color: var(--text);
+            margin-top: 0;
+        }
+        p { color: var(--muted); }
+        hr {
+            margin: 20px 0;
+            border: 0;
+            border-top: 1px solid var(--border);
+        }
+        h3 { margin-top: 30px; color: var(--text); }
+        form { display: flex; flex-direction: column; gap: 15px; }
+        input[type="file"] { padding: 5px; border: 1px solid var(--border); border-radius: 8px; }
+        button {
+            padding: 12px;
+            background-color: var(--accent);
+            border: none;
+            color: white;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 600;
+        }
+        button:hover { background-color: var(--accent-hover); }
+        .bank-details {
+            background-color: #f1f3f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .bank-details strong {
+            display: inline-block;
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Bank Transfer Payment</h2>
+
+        <p>Please transfer the total amount to:</p>
+
+        <div class="bank-details">
+            <p><strong>Bank:</strong> OPAY</p>
+            <p><strong>Account Name:</strong> ONYEKWERE PROSPER UCHECHUKWU</p>
+            <p><strong>Account Number:</strong> 8145929790</p>
+            <p><strong>Reference:</strong> ORDER-{{ order_id }}</p>
+        </div>
+
+        <hr>
+
+        <h3>Upload Payment Proof</h3>
+        <form method="post" action="/upload-proof/{{ order_id }}" enctype="multipart/form-data">
+            <!-- CSRF token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <input type="file" name="proof" required>
+            <button type="submit">Submit Proof</button>
+        </form>
+    </div>
+</body>
+</html>

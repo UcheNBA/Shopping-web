@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}My Orders - My Shop{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto">
+  <h1>My Orders</h1>
+  {% if orders %}
+    {% for order in orders %}
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <div>
+          <strong style="font-size: 1.1rem;">Order #{{ order.id }}</strong>
+          <div style="font-size: 0.9rem; color: var(--muted);">Placed on: {{ (order.created_at or '').split(' ')[0] }}</div>
+        </div>
+        <div>
+          <span class="chip" style="{% if order.status in ['PAID', 'SHIPPED', 'DELIVERED'] %}background:var(--success);color:white{% elif order.status in ['REJECTED', 'CANCELLED'] %}background:var(--danger);color:white{% else %}background:var(--warning);color:white{% endif %}">
+            {{ order.status.replace('_', ' ')|title }}
+          </span>
+        </div>
+      </div>
+
+      {% for item in order.order_items %}
+      <div style="display:flex; align-items:center; gap: 1rem; {% if not loop.last %}margin-bottom: 1rem;{% endif %}">
+        <img src="{{ url_for('static', filename=item.image) if item.image else url_for('static', filename='placeholder.svg') }}" class="thumb" style="width:50px; height:50px; object-fit:cover;">
+        <div>
+          <div>{{ item.name }}</div>
+          <div style="font-size: 0.9rem; color: var(--muted);">Qty: {{ item.quantity }} &middot; ₦{{ '%.2f'|format(item.price) }}</div>
+        </div>
+        <div style="margin-left:auto; text-align:right;">
+          {% if order.status == 'DELIVERED' %}
+            {% if item.has_review %}
+              <span class="chip">Reviewed</span>
+            {% else %}
+              <a href="{{ url_for('add_review', product_id=item.product_id, order_id=order.id) }}" class="btn small ghost">Leave Review</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 1rem;">
+        <strong style="font-size: 1.1rem;">Total: ₦{{ '%.2f'|format(order.total) }}</strong>
+        <div style="display:flex; gap:0.5rem">
+          {% if order.status == 'PENDING_PAYMENT' %}
+            <form action="{{ url_for('cancel_order', order_id=order.id) }}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn small ghost" style="color:var(--danger); border-color:var(--danger)">Cancel Order</button>
+            </form>
+          {% endif %}
+          <a class="btn small ghost" href="{{ url_for('track_order', order_id=order.id) }}">Track Order</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div style="text-align:center;padding:3rem;background:var(--card);border-radius:12px">
+    <p style="color:var(--muted)">You haven't placed any orders yet.</p>
+    <a class="btn" href="{{ url_for('shop') }}">Start Shopping</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

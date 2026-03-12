@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Verify Email - My Shop{% endblock %}
+{% block content %}
+<div style="max-width:640px;margin:2rem auto">
+  <h1>Email verification required</h1>
+  <p class="muted">You need to verify your email before accessing the site. A verification email was sent when you registered.</p>
+  <form method="post" action="/resend-verification" style="margin-top:1rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn" type="submit">Resend verification email</button>
+    <a class="btn ghost" href="/logout" style="margin-left:.5rem">Sign out</a>
+  </form>
+  {% if message %}
+    <p style="margin-top:1rem;color:var(--muted)">{{ message }}</p>
+  {% endif %}
+</div>
+{% endblock %}

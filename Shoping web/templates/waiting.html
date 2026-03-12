@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Submitted</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+        --bg: #F0F9FF;
+        --card: #FFFFFF;
+        --text: #0C4A6E;
+        --muted: #64748B;
+        --border: #BAE6FD;
+        --accent: #0EA5E9;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: var(--text);
+    }
+    .container {
+      background-color: var(--card);
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      text-align: center;
+      max-width: 400px;
+    }
+    h2 { color: var(--text); margin-bottom: 1rem; }
+    p { color: var(--muted); margin-bottom: 1.5rem; }
+    a {
+      display: inline-block;
+      text-decoration: none;
+      background-color: var(--accent);
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      transition: background 0.3s;
+      font-weight: 600;
+    }
+    a:hover { background-color: #2563EB; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Payment Submitted</h2>
+    <p>Your bank transfer proof has been uploaded.</p>
+    <p>Please wait while we confirm your payment.</p>
+    <a href="/">Back to Shop</a>
+  </div>
+</body>
+</html>

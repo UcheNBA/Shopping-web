@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Your Wishlist - My Shop{% endblock %}
+{% block content %}
+<h1>Your Wishlist</h1>
+
+{% if products %}
+  <div class="grid">
+    {% for p in products %}
+    <article class="card">
+      {% if p.image %}
+        <img class="product-img product-image-zoomable" src="{{ url_for('static', filename=p.image) }}" alt="{{ p.name }}">
+      {% else %}
+        <div style="height:160px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;color:var(--muted)">No image</div>
+      {% endif %}
+      <div style="flex:1">
+        <h3 style="margin:.5rem 0">{{ p.name }}</h3>
+        <p class="price">₦{{ '%.2f'|format(p.price) }}</p>
+      </div>
+      <div style="margin-top: .75rem;display:flex;gap:.5rem">
+        <form action="/add_to_cart" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="product_id" value="{{ p.id }}">
+          <input type="hidden" name="quantity" value="1">
+          <button class="btn small" type="submit"><i class="fa fa-shopping-cart" style="margin-right:.45rem"></i>Add to Cart</button>
+        </form>
+        <form action="{{ url_for('remove_from_wishlist') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ p.id }}">
+            <button class="btn ghost small" type="submit" title="Remove from Wishlist"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>Your wishlist is empty. <a href="/">Start browsing</a> to add items.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}FAQ - My Shop{% endblock %}
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <h1 style="text-align: center;">Frequently Asked Questions</h1>
+
+    <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+        <details class="card" style="padding: 1.25rem; cursor: pointer;">
+            <summary style="font-weight: 600; font-size: 1.1rem;">How do I track my order?</summary>
+            <p style="margin-top: 0.75rem; color: var(--muted); line-height: 1.7;">Once your order is shipped, you can track its progress from the "My Orders" page in your profile. You will see the current status (e.g., Paid, Shipped, Delivered) for each order.</p>
+        </details>
+
+        <details class="card" style="padding: 1.25rem; cursor: pointer;">
+            <summary style="font-weight: 600; font-size: 1.1rem;">What are the payment options?</summary>
+            <p style="margin-top: 0.75rem; color: var(--muted); line-height: 1.7;">We currently accept payment via Bank Transfer. After placing your order, you will be provided with our bank account details to complete the payment. You must then upload proof of payment for us to confirm your order.</p>
+        </details>
+
+        <details class="card" style="padding: 1.25rem; cursor: pointer;">
+            <summary style="font-weight: 600; font-size: 1.1rem;">What is your return policy?</summary>
+            <p style="margin-top: 0.75rem; color: var(--muted); line-height: 1.7;">We have a 7-day return policy for items that are defective or not as described. Please contact our support team with your order ID and photos of the issue to initiate a return.</p>
+        </details>
+    </div>
+</div>
+{% endblock %}

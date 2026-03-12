@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div style="max-width:720px;margin:0 auto">
+  <h1>Notifications</h1>
+  {% if notifications|length == 0 %}
+    <p>No notifications.</p>
+  {% else %}
+    <ul style="list-style:none;padding:0">
+      {% for n in notifications %}
+      <li style="background:var(--card);padding:1rem;margin-bottom:.5rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:.95rem;color:var(--muted)">{{ n.created_at }}</div>
+          <div style="margin-top:.25rem">{{ n.message }}</div>
+        </div>
+        <div>
+          <form action="{{ url_for('delete_notification', nid=n.id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn small ghost" type="submit" title="Delete" style="color:#ef4444;border-color:rgba(239,68,68,0.2);margin-left:1rem;"><i class="fas fa-trash" style="margin-right: .25rem;"></i> Delete</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  <a class="btn ghost" href="/profile">Back to profile</a>
+</div>
+{% endblock %}

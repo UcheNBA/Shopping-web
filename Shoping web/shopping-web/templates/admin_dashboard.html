@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Admin Dashboard</h1>
+        <nav>
+            <a href="{{ url_for('admin_logout') }}">Logout</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Manage Products</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.id }}</td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>${{ product.price }}</td>
+                        <td>
+                            <form action="{{ url_for('admin_delete') }}" method="POST">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <button type="submit">Delete</button>
+                            </form>
+                            <a href="{{ url_for('admin_edit', product_id=product.id) }}">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h3>Add New Product</h3>
+            <form action="{{ url_for('admin_add_product') }}" method="POST" enctype="multipart/form-data">
+                <input type="text" name="name" placeholder="Product Name" required>
+                <textarea name="description" placeholder="Product Description"></textarea>
+                <input type="number" name="price" placeholder="Price" step="0.01" required>
+                <input type="file" name="image">
+                <button type="submit">Add Product</button>
+            </form>
+        </section>
+        <section>
+            <h2>Manage Users</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.full_name }}</td>
+                        <td>
+                            <form action="{{ url_for('admin_delete_user') }}" method="POST">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>
