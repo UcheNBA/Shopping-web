@@ -287,7 +287,9 @@ def add_product_db(name, description, price, image_path=None):
     return pid
 
 
-def update_product_db(product_id, name=None, description=None, price=None, image_path=None, category=None):
+def update_product_db(
+    product_id, name=None, description=None, price=None, image_path=None,
+    category=None, rating=None):
     conn = get_db()
     cur = conn.cursor()
     updates = []
@@ -307,6 +309,9 @@ def update_product_db(product_id, name=None, description=None, price=None, image
     if category is not None:
         updates.append("category=?")
         values.append(category)
+    if rating is not None:
+        updates.append("rating=?")
+        values.append(rating)
     if updates:
         cur.execute(
             f"UPDATE products SET {','.join(updates)} WHERE id=?", (*values, product_id))
