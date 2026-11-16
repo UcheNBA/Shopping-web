@@ -14,6 +14,16 @@ python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -r requirements.
 
 App runs on `http://localhost:5000`.
 
+## Cloudinary configuration
+
+The app reads `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` from environment variables. For deployment, configure
+these in your hosting provider's environment settings. Never commit `.env` or
+put the API secret in browser JavaScript.
+
+`.env.example` lists the variable names. Copy it to `.env` for local reference,
+then provide the values through your environment before starting the app.
+
 This is a demo scaffold: replace the `secret_key`, add persistent storage, and integrate payment for production.
 
 Admin
