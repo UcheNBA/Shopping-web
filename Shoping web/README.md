@@ -29,13 +29,17 @@ This is a demo scaffold: replace the `secret_key`, add persistent storage, and i
 ## Admin access
 
 The app does not create a default admin account. Admin passwords are stored as
-hashes in the database. To create or reset an admin on Render Free, temporarily
-add `ADMIN_BOOTSTRAP_USERNAME` and `ADMIN_BOOTSTRAP_PASSWORD` in the service's
-Environment settings. Use a password with at least 12 characters. After the
-deployment logs show `Admin bootstrap credentials applied.`, remove both
-variables and save the changes. The account remains in the database, and the
-variables should not be left configured because they reset the password on
-every app startup.
+hashes in the database. To create or reset an admin on Render Free, add
+`ADMIN_BOOTSTRAP_USERNAME` and `ADMIN_BOOTSTRAP_PASSWORD` in the service's
+Environment settings. Use a password with at least 12 characters and keep both
+variables configured: the app applies them on startup, which restores the admin
+after a restart or redeploy. Change the password by updating the Render
+environment variable and redeploying. Never commit the password to GitHub.
+
+The current app stores data in a local SQLite `data.db`; it does not use
+`DATABASE_URL`. Render Free filesystems are ephemeral, so other database changes
+may not survive a redeploy. Use a persistent database integration before
+relying on stored shop data in production.
 
 Create or update admin user via Flask CLI
 
