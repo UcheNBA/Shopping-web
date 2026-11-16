@@ -14,6 +14,8 @@ import secrets
 import smtplib
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -29,6 +31,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-prod")
 csrf = CSRFProtect(app)
+DATABASE_ERRORS = (sqlite3.OperationalError, psycopg2.OperationalError)
 
 # Configure Cloudinary using environment variables for security
 cloudinary.config(
@@ -57,12 +60,71 @@ def ensure_landing_first():
 
 # ================= PATHS =================
 
+DATABASE_URL = os.environ.get("DATABASE_URL")
 DB_PATH = os.path.join(BASE_DIR, "data.db")
+
+
+class PostgresCursor(RealDictCursor):
+    def execute(self, query, vars=None):
+        query = query.replace("?", "%s")
+        query = re.sub(r"\bid INTEGER PRIMARY KEY\b", "id SERIAL PRIMARY KEY", query)
+        query = re.sub(
+            r"\b(created_at|proof_uploaded_at|reset_token_expiry) TEXT\b",
+            r"\1 TIMESTAMP",
+            query,
+        )
+        query = re.sub(
+            r"(FOREIGN KEY\([^)]*\) REFERENCES \w+\(id\))",
+            r"\1 ON DELETE CASCADE",
+            query,
+        )
+        return super().execute(query, vars)
+
+    @staticmethod
+    def _normalize_row(row):
+        if row is None:
+            return None
+        return {
+            key: value.strftime("%Y-%m-%d %H:%M:%S.%f")
+            if isinstance(value, datetime.datetime) else value
+            for key, value in row.items()
+        }
+
+    def fetchone(self):
+        return self._normalize_row(super().fetchone())
+
+    def fetchall(self):
+        return [self._normalize_row(row) for row in super().fetchall()]
+
+
+class PostgresConnection:
+    def __init__(self, connection):
+        self.connection = connection
+
+    def cursor(self):
+        return self.connection.cursor(cursor_factory=PostgresCursor)
+
+    def execute(self, query, vars=None):
+        cursor = self.cursor()
+        cursor.execute(query, vars)
+        return cursor
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
+
+    def close(self):
+        self.connection.close()
 
 # ================= DB =================
 
 
 def get_db():
+    if DATABASE_URL:
+        database_url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        return PostgresConnection(psycopg2.connect(database_url))
     # increase timeout to reduce 'database is locked' errors under concurrent access
     # allow access across threads for the dev server
     conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
@@ -180,23 +242,24 @@ def migrate_db():
     conn = get_db()
     cur = conn.cursor()
     try:
-        cur.execute("ALTER TABLE users ADD COLUMN reset_token TEXT")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cur.execute("ALTER TABLE users ADD COLUMN reset_token_expiry TEXT")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cur.execute("ALTER TABLE orders ADD COLUMN proof TEXT")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cur.execute("ALTER TABLE orders ADD COLUMN proof_uploaded_at TEXT")
-    except sqlite3.OperationalError:
-        pass
-    conn.commit()
-    conn.close()
+        if DATABASE_URL:
+            cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT")
+            cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP")
+            cur.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS proof TEXT")
+            cur.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS proof_uploaded_at TIMESTAMP")
+        else:
+            for statement in (
+                    "ALTER TABLE users ADD COLUMN reset_token TEXT",
+                    "ALTER TABLE users ADD COLUMN reset_token_expiry TEXT",
+                    "ALTER TABLE orders ADD COLUMN proof TEXT",
+                    "ALTER TABLE orders ADD COLUMN proof_uploaded_at TEXT"):
+                try:
+                    cur.execute(statement)
+                except sqlite3.OperationalError:
+                    pass
+        conn.commit()
+    finally:
+        conn.close()
 
 migrate_db()
 
@@ -287,10 +350,12 @@ def get_product_db(pid):
 def add_product_db(name, description, price, image_path=None):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("INSERT INTO products (name, price, description, category, image, rating) VALUES (?,?,?,?,?,?)",
-                (name, price, description, None, image_path, 5.0))
+    insert_sql = "INSERT INTO products (name, price, description, category, image, rating) VALUES (?,?,?,?,?,?)"
+    if DATABASE_URL:
+        insert_sql += " RETURNING id"
+    cur.execute(insert_sql, (name, price, description, None, image_path, 5.0))
     conn.commit()
-    pid = cur.lastrowid
+    pid = cur.fetchone()["id"] if DATABASE_URL else cur.lastrowid
     conn.close()
     return pid
 
@@ -350,8 +415,11 @@ def get_cart_for_user(uid):
 
 def save_cart_for_user(uid, cart):
     conn = get_db()
-    conn.execute("INSERT OR REPLACE INTO carts VALUES (?,?)",
-                 (uid, json.dumps(cart)))
+    conn.execute(
+        "INSERT INTO carts (user_id, cart_json) VALUES (?, ?) "
+        "ON CONFLICT(user_id) DO UPDATE SET cart_json=excluded.cart_json",
+        (uid, json.dumps(cart)),
+    )
     conn.commit()
     conn.close()
 
@@ -373,8 +441,11 @@ def get_wishlist_for_user(uid):
 
 def save_wishlist_for_user(uid, wishlist):
     conn = get_db()
-    conn.execute("INSERT OR REPLACE INTO wishlists VALUES (?,?)",
-                 (uid, json.dumps(wishlist)))
+    conn.execute(
+        "INSERT INTO wishlists (user_id, product_ids) VALUES (?, ?) "
+        "ON CONFLICT(user_id) DO UPDATE SET product_ids=excluded.product_ids",
+        (uid, json.dumps(wishlist)),
+    )
     conn.commit()
     conn.close()
 
@@ -392,12 +463,15 @@ def calculate_cart_total(uid):
 def create_order(uid, total, method):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("""
+    insert_sql = """
         INSERT INTO orders (user_id,total,status,payment_method,created_at)
         VALUES (?,?,?,?,?)
-    """, (uid, total, "PENDING_PAYMENT", method, datetime.datetime.utcnow()))
+    """
+    if DATABASE_URL:
+        insert_sql += " RETURNING id"
+    cur.execute(insert_sql, (uid, total, "PENDING_PAYMENT", method, datetime.datetime.utcnow()))
     conn.commit()
-    oid = cur.lastrowid
+    oid = cur.fetchone()["id"] if DATABASE_URL else cur.lastrowid
     conn.close()
     return oid
 
@@ -424,7 +498,6 @@ def add_notification(user_id, message):
 
 def fetch_notifications_for_user(uid):
     conn = get_db()
-    conn.row_factory = sqlite3.Row
     rows = conn.execute(
         'SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC', (uid,)).fetchall()
     conn.close()
@@ -482,11 +555,11 @@ def register():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 form.get('username'), password_hash, form.get('full_name'), form.get('email'),
-                form.get('age'), form.get('dob'), form.get('state'), form.get('country'),
+                form.get('age') or None, form.get('dob'), form.get('state'), form.get('country'),
                 form.get('address'), form.get('phone'), datetime.datetime.utcnow()
             ))
             conn.commit()
-        except sqlite3.IntegrityError:
+        except (sqlite3.IntegrityError, psycopg2.IntegrityError):
             # This happens if the username is already taken
             conn.close()
             return render_template("register.html", error="Username already exists.")
@@ -858,9 +931,6 @@ def payment_proofs():
 @app.route("/logout")
 @login_required
 def logout():
-    user_id = session.get("user_id")
-    if user_id:
-        delete_cart_for_user(user_id)
     session.clear()
     return redirect(url_for("login"))
 
@@ -879,7 +949,7 @@ def profile():
         try:
             full_name = request.form.get("full_name") or ''
             email = request.form.get("email") or ''
-            age = request.form.get("age") or ''
+            age = request.form.get("age") or None
             dob = request.form.get("dob") or ''
             state = request.form.get("state") or ''
             country = request.form.get("country") or ''
@@ -1197,7 +1267,7 @@ def approve_order(order_id):
                 add_notification(
                     uid, f"Your payment for order #{order_id} has been approved and is now being prepared for shipping.")
             break
-        except sqlite3.OperationalError:
+        except DATABASE_ERRORS:
             attempts += 1
             if attempts >= 5:
                 return jsonify({'ok': False, 'error': 'database locked'}), 500
@@ -1222,7 +1292,8 @@ def reject_order(order_id):
             conn.commit()
             conn.close()
             break
-        except sqlite3.OperationalError:
+        except DATABASE_ERRORS:
+            conn.rollback()
             attempts += 1
             if attempts >= 5:
                 try:
@@ -1239,7 +1310,7 @@ def reject_order(order_id):
                 add_notification(
                     uid, f"Your payment for order #{order_id} was rejected. Please double-check the payment details and re-upload your proof, or contact us if you need help.")
                 break
-            except sqlite3.OperationalError:
+            except DATABASE_ERRORS:
                 attempts += 1
                 if attempts >= 5:
                     return jsonify({'ok': False, 'error': 'database locked'}), 500
@@ -1265,7 +1336,8 @@ def ship_order(order_id):
                 conn.commit()
                 success = True
                 break
-            except sqlite3.OperationalError:
+            except DATABASE_ERRORS:
+                conn.rollback()
                 attempts += 1
                 time.sleep(0.1)
     finally:
@@ -1296,7 +1368,8 @@ def deliver_order(order_id):
                 conn.commit()
                 success = True
                 break
-            except sqlite3.OperationalError:
+            except DATABASE_ERRORS:
+                conn.rollback()
                 attempts += 1
                 time.sleep(0.1)
     finally:

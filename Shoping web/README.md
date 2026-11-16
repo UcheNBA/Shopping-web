@@ -21,8 +21,9 @@ The app reads `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
 these in your hosting provider's environment settings. Never commit `.env` or
 put the API secret in browser JavaScript.
 
-`.env.example` lists the variable names. Copy it to `.env` for local reference,
-then provide the values through your environment before starting the app.
+`.env.example` lists the variable names. Set `DATABASE_URL` to your PostgreSQL
+connection URL to use persistent PostgreSQL storage; without it, the app uses
+local SQLite. Copy `.env.example` to `.env` for local development.
 
 This is a demo scaffold: replace the `secret_key`, add persistent storage, and integrate payment for production.
 
@@ -36,10 +37,13 @@ variables configured: the app applies them on startup, which restores the admin
 after a restart or redeploy. Change the password by updating the Render
 environment variable and redeploying. Never commit the password to GitHub.
 
-The current app stores data in a local SQLite `data.db`; it does not use
-`DATABASE_URL`. Render Free filesystems are ephemeral, so other database changes
-may not survive a redeploy. Use a persistent database integration before
-relying on stored shop data in production.
+Render Free filesystems are ephemeral. Configure `DATABASE_URL` with the
+PostgreSQL database's internal URL in the Render service's Environment settings
+so accounts, products, carts, and orders persist across restarts and deploys.
+Existing data in a local SQLite database is not copied automatically.
+Users whose accounts were created before PostgreSQL is configured will need to
+register again unless their existing database is migrated separately. Logging
+out only clears the login session; it does not delete the account or saved cart.
 
 Create or update admin user via Flask CLI
 
