@@ -79,7 +79,7 @@
     {% for p in products %}
     <article class="card">
       {% if p.image %}
-        <img class="product-img product-image-zoomable" src="{{ url_for('static', filename=p.image) }}" alt="{{ p.name }}">
+        <img class="product-img product-image-zoomable" src="{{ p.image if p.image.startswith('http') else url_for('static', filename=p.image) }}" alt="{{ p.name }}">
       {% else %}
         <div style="height:160px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;color:var(--muted)">No image</div>
       {% endif %}

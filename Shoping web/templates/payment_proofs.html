@@ -30,7 +30,7 @@
       <td data-label="Date Uploaded">{{ (o.proof_uploaded_at or '').split('.')[0] }}</td>
       <td>
         {% if o.proof %}
-          <a class="btn small" href="{{ url_for('static', filename=o.proof) }}" target="_blank">View Proof</a>
+          <a class="btn small" href="{{ o.proof if o.proof.startswith('http') else url_for('static', filename=o.proof) }}" target="_blank">View Proof</a>
         {% else %}
           Not uploaded
         {% endif %}

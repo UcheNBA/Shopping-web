@@ -5,7 +5,7 @@
   <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
     <div style="flex:1;min-width:240px">
       {% if product.image %}
-        <img class="product-img product-image-zoomable" src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
+        <img class="product-img product-image-zoomable" src="{{ product.image if product.image.startswith('http') else url_for('static', filename=product.image) }}" alt="{{ product.name }}">
       {% else %}
         <div style="height:260px;border-radius:8px;background:linear-gradient(180deg,#f0f6ff,#f7fbff);display:flex;align-items:center;justify-content:center;color:var(--muted)">No image</div>
       {% endif %}

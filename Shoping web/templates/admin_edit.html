@@ -24,7 +24,7 @@
 
   {% if product.image %}
     <p>Current image:</p>
-    <img class="thumb product-image-zoomable" src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}"><br><br>
+    <img class="thumb product-image-zoomable" src="{{ product.image if product.image.startswith('http') else url_for('static', filename=product.image) }}" alt="{{ product.name }}"><br><br>
   {% endif %}
 
   <div class="row" style="margin-top:.5rem">

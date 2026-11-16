@@ -13,7 +13,7 @@
     <tr>
       <td data-label="Product" style="display:flex;align-items:center;gap:.75rem">
         {% if it.product.image %}
-          <img class="thumb product-image-zoomable" src="{{ url_for('static', filename=it.product.image) }}" alt="{{ it.product.name }}">
+          <img class="thumb product-image-zoomable" src="{{ it.product.image if it.product.image.startswith('http') else url_for('static', filename=it.product.image) }}" alt="{{ it.product.name }}">
         {% endif %}
         <div>
           <div style="font-weight:700">{{ it.product.name }}</div>
