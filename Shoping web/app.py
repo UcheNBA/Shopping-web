@@ -192,6 +192,41 @@ def migrate_db():
 
 migrate_db()
 
+
+def bootstrap_admin_from_env():
+    username = os.environ.get("ADMIN_BOOTSTRAP_USERNAME")
+    password = os.environ.get("ADMIN_BOOTSTRAP_PASSWORD")
+    if not username and not password:
+        return
+    if not username or not password:
+        raise RuntimeError("Both admin bootstrap environment variables are required")
+    if len(password) < 12:
+        raise RuntimeError("Admin bootstrap password must be at least 12 characters")
+
+    conn = get_db()
+    try:
+        password_hash = generate_password_hash(password)
+        admin = conn.execute(
+            "SELECT id FROM admin_users WHERE username = ?", (username,)
+        ).fetchone()
+        if admin:
+            conn.execute(
+                "UPDATE admin_users SET password_hash = ? WHERE username = ?",
+                (password_hash, username),
+            )
+        else:
+            conn.execute(
+                "INSERT INTO admin_users (username, password_hash) VALUES (?, ?)",
+                (username, password_hash),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+    print("Admin bootstrap credentials applied.")
+
+
+bootstrap_admin_from_env()
+
 # ================= HELPERS =================
 
 

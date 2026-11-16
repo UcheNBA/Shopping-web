@@ -26,18 +26,16 @@ then provide the values through your environment before starting the app.
 
 This is a demo scaffold: replace the `secret_key`, add persistent storage, and integrate payment for production.
 
-Admin
-- Default admin username: `admin`
-- Default admin password: `adminpass`
+## Admin access
 
-You can override credentials by setting environment variables before running the app:
-
-Windows PowerShell example:
-```powershell
-$env:SHOP_ADMIN_USER = 'myadmin'; $env:SHOP_ADMIN_PASS = 's3cret'; python .\app.py
-```
-
-Be sure to change the default credentials before exposing the app publicly.
+The app does not create a default admin account. Admin passwords are stored as
+hashes in the database. To create or reset an admin on Render Free, temporarily
+add `ADMIN_BOOTSTRAP_USERNAME` and `ADMIN_BOOTSTRAP_PASSWORD` in the service's
+Environment settings. Use a password with at least 12 characters. After the
+deployment logs show `Admin bootstrap credentials applied.`, remove both
+variables and save the changes. The account remains in the database, and the
+variables should not be left configured because they reset the password on
+every app startup.
 
 Create or update admin user via Flask CLI
 
