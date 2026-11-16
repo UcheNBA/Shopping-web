@@ -187,6 +187,14 @@ def migrate_db():
         cur.execute("ALTER TABLE users ADD COLUMN reset_token_expiry TEXT")
     except sqlite3.OperationalError:
         pass
+    try:
+        cur.execute("ALTER TABLE orders ADD COLUMN proof TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cur.execute("ALTER TABLE orders ADD COLUMN proof_uploaded_at TEXT")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
